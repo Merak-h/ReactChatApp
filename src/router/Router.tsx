@@ -15,10 +15,10 @@ export const Router:FC = memo(()=>{
             <Route path="/" element={<Login />} />
             <Route element={<PrivateRoute />}>
                 <Route path="/setting/profile" element={<Profile />} />
+                <Route path="/setting" element={<Setting />} />
                 <Route element={<DashboardLayout />}>
                     <Route path="/home" element={<Home />} />
                     <Route path="/user" element={<UserManagement />} />
-                    <Route path="/setting" element={<Setting />} />
                 </Route>
                 <Route path="*" element={<Page404/>} />
             </Route>
