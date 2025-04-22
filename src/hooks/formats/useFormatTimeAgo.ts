@@ -47,7 +47,10 @@
 import { useEffect, useState } from "react";
 import { Timestamp } from 'firebase/firestore';
 
-const getFormatted = (timestamp: Timestamp): { text: string; nextUpdateIn: number } => {
+const getFormatted = (timestamp: Timestamp | null): { text: string; nextUpdateIn: number } => {
+  if(timestamp === null){
+    return { text:  "", nextUpdateIn: 31536000 }
+  }
   const nowSec = Math.floor(Date.now() / 1000);
   const timestampSec = timestamp.seconds;
   const diff = nowSec - timestampSec;
@@ -72,7 +75,7 @@ const getFormatted = (timestamp: Timestamp): { text: string; nextUpdateIn: numbe
   }
 };
 
-export const useFormatTimeAgo = (timestamp: Timestamp) => {
+export const useFormatTimeAgo = (timestamp: Timestamp | null) => {
   const [ago, setAgo] = useState(() => getFormatted(timestamp).text);
 
   useEffect(() => {

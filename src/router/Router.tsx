@@ -18,6 +18,7 @@ export const Router:FC = memo(()=>{
                 <Route path="/setting" element={<Setting />} />
                 <Route element={<DashboardLayout />}>
                     <Route path="/home" element={<Home />} />
+                    <Route path="/home/:id" element={<Home />} />
                     <Route path="/user" element={<UserManagement />} />
                 </Route>
                 <Route path="*" element={<Page404/>} />

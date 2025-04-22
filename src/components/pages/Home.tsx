@@ -2,71 +2,91 @@ import { FC, memo, useEffect, useState } from "react";
 
 import { Avatar, Box, Button, Card, Circle, Container, Flex, Float, HStack, Input, Separator, Stack, Text, VStack, Wrap, WrapItem } from "@chakra-ui/react";
 import { useLoginUser } from "../../hooks/useLoginUser";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, DocumentData, QuerySnapshot, setDoc } from "firebase/firestore";
 import { db } from "../../firebase";
 import { useDummy } from "../../hooks/useDummy";
 import { ChannelsListCard } from "../organisms/home/ChannelsListCard";
 import { Channel } from "../organisms/home/Channel";
+import { useChannels } from "../../hooks/useChannels";
+import { useNavigate, useParams  } from "react-router-dom";
+import { readChannelList } from "../../api/read ChannelList";
+import { observeJoinedChannelIds } from "../../api/observeJoinedChannelIds";
+import { ChannelOverViewData, observeChannelOverView } from "../../api/observeChannelOverView";
 
 export const Home:FC = memo( () => {
 
+        const { id:channelId } = useParams();
+
         const { account } = useLoginUser();
 
-        const [uid] = useState(account?.account_id);
-        const [userName] = useState(account?.display_name);
         // const [createdAt] = useState(loginUser?.metadata.creationTime);
         // const [lastLoginAt] = useState(loginUser?.metadata.lastSignInTime);
         
-        const [currentChannel, setCurrentChannel] = useState('default');
+        const [currentChannel, setCurrentChannel] = useState(channelId||'');
 
-        
-        
-
-    //    const handleSubmit = async () => {
-    //         try {
-    //             await setDoc(doc(db, "users", uid!), {
-    //               message:"tesut",
-    //             }, {}); // ← merge: true で既存データを上書きしない
-    //             console.log("メッセージ保存成功");
-    //           } catch (err) {
-    //             console.error("Firestore書き込みエラー:", err);
-    //           }
-    //    } 
-
-
-       const {dummyChannelsList} = useDummy();
-       const [channelsList,setChannelsList] = useState(dummyChannelsList);
+    //    const {dummyChannelsList} = useDummy();
+    //    const [channelsList,setChannelsList] = useState(dummyChannelsList);
        
-        // console.log(channelsList)
 
-
+        const navigate = useNavigate();
         const handleOpneChannel = (hcannelId:string) =>{
             setCurrentChannel(hcannelId)
+            navigate(`/home/${currentChannel}`);
         }
+
+
+        // てｓｔ
+        const [channels, setChannels] = useState<string[]>([]);
+        const [channelsList, setChannelsList] = useState<ChannelOverViewData[]>([]);
+
+        useEffect(()=>{
+            if(account)
+             observeJoinedChannelIds(account.account_id, (channels) =>{
+                setChannels(channels);
+
+            });
+        },[]);
+
+        useEffect(() => {
+        if (channels.length === 0) return;
+
+        const channelMap = new Map<string, ChannelOverViewData>();
+        const unsubscribes: (() => void)[] = [];
+
+        channels.forEach((channelId) => {
+            const unsubscribe = observeChannelOverView(channelId, account?.account_id??"", (channelData) => {
+            channelMap.set(channelId, channelData);
+            setChannelsList(Array.from(channelMap.values())); // 最新の状態に更新
+            });
+            unsubscribes.push(unsubscribe);
+        });
+
+        return () => {
+            unsubscribes.forEach((unsub) => unsub()); // 監視解除
+        };
+        }, [channels]);
+
+        useEffect(()=>{console.log('channelsList',channelsList)}, [channelsList]);
 
 
 return(
     <>
         <Container h="100%">
-            <Box>
-                {uid}
-            </Box>
-            <Box>
-            {userName}
-            </Box>
             <Flex h="100%">
                 <Box overflow="auto" h="100%" w="300px">
                     <Box w="100%">
-                        {channelsList.map((channel)=>(
+                        {channelsList?.map((channel)=>(
                             <ChannelsListCard  
-                                key={channel.id}
-                                id={channel.id} 
-                                displayName={channel.displayName} 
-                                icon={channel.icon} 
-                                message={channel.message} 
-                                timestamp={channel.timestamp} 
-                                unread={channel.unread}
-                                onClick={()=>{handleOpneChannel(channel.id)}}
+                                key={channel.channelId}
+                                id={channel.channelId} 
+                                displayName={channel.channelName} 
+                                icon={channel.channelIcon} 
+                                message={channel.lastMessage} 
+                                timestamp={channel.lastMessageAt} 
+                                // unread={channel.unreradCount}
+                                unread={0}
+                                onClick={()=>{handleOpneChannel(channel.channelId)}}
+                                isCurrent = {currentChannel == channel.channelId}
                             />
                         ))}
                     </Box>

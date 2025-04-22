@@ -1,4 +1,5 @@
 import { Avatar, AvatarIcon, CloseButton, Dialog, Field, Input, Stack, Text, Flex, IconButton, HStack, Icon } from "@chakra-ui/react";
+import { BsChatLeftText } from "react-icons/bs";
 import { ChangeEvent, FC, memo, useEffect, useState } from "react";
 import { BiSolidEditAlt } from "react-icons/bi";
 import { FaCheck } from "react-icons/fa6";
@@ -7,6 +8,8 @@ import { User } from "../../../types/api/user";
 import { PrimaryButton } from "../../../components/atoms/button/PrimaryButton";
 import { FriendDataWithNickName } from "../../../types/frinedData";
 import { useNickName } from "../../../hooks/useNickName";
+import { useChannels } from "../../../hooks/useChannels";
+import { Navigate, useNavigate } from "react-router-dom";
 
 type Props = {
     open: boolean;
@@ -52,6 +55,13 @@ export const UserDetailDialog:FC<Props> = memo((props)=>{
             console.error('handleUpdate',error);
             setUpdateNickNameError(true);
         }
+    }
+
+    const { getPersonalChannel } = useChannels()
+    const navigate = useNavigate();
+    const handleJumpChannel = async () =>{
+        const channel = await getPersonalChannel(accountId);
+        navigate(`/home/${channel}`);
     }
 
     return(
@@ -108,6 +118,9 @@ export const UserDetailDialog:FC<Props> = memo((props)=>{
                         </>
                         }
                         <Text>{message}</Text>
+                        <IconButton size="sm" w="fit-content" onClick={handleJumpChannel}>
+                                <BsChatLeftText />
+                            </IconButton>
                     </Stack>
                 </Dialog.Body>
             </Dialog.Content>
