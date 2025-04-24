@@ -4,12 +4,10 @@ import { Avatar, Box, Button, Card, Circle, Container, Flex, Float, HStack, Inpu
 import { useLoginUser } from "../../hooks/useLoginUser";
 import { doc, DocumentData, QuerySnapshot, setDoc } from "firebase/firestore";
 import { db } from "../../firebase";
-import { useDummy } from "../../hooks/useDummy";
 import { ChannelsListCard } from "../organisms/home/ChannelsListCard";
 import { Channel } from "../organisms/home/Channel";
 import { useChannels } from "../../hooks/useChannels";
 import { useNavigate, useParams  } from "react-router-dom";
-import { readChannelList } from "../../api/read ChannelList";
 import { observeJoinedChannelIds } from "../../api/observeJoinedChannelIds";
 import { ChannelOverViewData, observeChannelOverView } from "../../api/observeChannelOverView";
 
@@ -24,27 +22,26 @@ export const Home:FC = memo( () => {
         
         const [currentChannel, setCurrentChannel] = useState(channelId||'');
 
-    //    const {dummyChannelsList} = useDummy();
-    //    const [channelsList,setChannelsList] = useState(dummyChannelsList);
-       
+
+       useEffect(()=>{
+        setCurrentChannel(currentChannel)
+       },[channelId])
 
         const navigate = useNavigate();
         const handleOpneChannel = (hcannelId:string) =>{
             setCurrentChannel(hcannelId)
-            navigate(`/home/${currentChannel}`);
+            navigate(`/home/${hcannelId}`);
         }
 
-
-        // てｓｔ
         const [channels, setChannels] = useState<string[]>([]);
         const [channelsList, setChannelsList] = useState<ChannelOverViewData[]>([]);
 
         useEffect(()=>{
-            if(account)
-             observeJoinedChannelIds(account.account_id, (channels) =>{
+            if(!account) return ;
+             const channelIdsUnsubscribe = observeJoinedChannelIds(account.account_id, (channels) =>{
                 setChannels(channels);
-
             });
+            return ()=>channelIdsUnsubscribe();
         },[]);
 
         useEffect(() => {
@@ -66,14 +63,15 @@ export const Home:FC = memo( () => {
         };
         }, [channels]);
 
-        useEffect(()=>{console.log('channelsList',channelsList)}, [channelsList]);
-
 
 return(
     <>
-        <Container h="100%">
-            <Flex h="100%">
+        <Container h="100%" w="100%" p={0}>
+            <Flex h="100%" w="100%" justifyContent="left">
                 <Box overflow="auto" h="100%" w="300px">
+                    {/* <Box>
+                        {createdAt===lastLoginAt?"初めまして！こんにちは！":"おかえりなさい！"}{userName??"名無し"}さん
+                    </Box> */}
                     <Box w="100%">
                         {channelsList?.map((channel)=>(
                             <ChannelsListCard  
@@ -91,30 +89,8 @@ return(
                         ))}
                     </Box>
                 </Box>
-                <Box>
-                    <Channel channelId={currentChannel}>
-
-                    </Channel>
-                {/* <p>Home</p>
-        <p>
-            To Do
-        </p>
-        <p>
-            リロード時にログインユーザーの情報が消える問題
-        </p>
-        <p>
-            Firebaseに情報を登録
-        </p>
-        <p>
-            web socket
-        </p>
-        <p>
-            web hook
-        </p>
-        <Box>
-            {createdAt===lastLoginAt?"初めまして！こんにちは！":"おかえりなさい！"}{userName??"名無し"}さん
-        </Box>
-        <Button onClick={handleSubmit}>登録</Button> */}
+                <Box h="100%" w="100%">
+                    <Channel channelId={currentChannel} />
                 </Box>
             </Flex>
 

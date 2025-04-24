@@ -4,7 +4,9 @@ import { account, friend } from "../types/account";
 import { User } from "firebase/auth";
 import { isHandleName } from "./isHandleName";
 
-
+/* 
+アカウント作成用API
+*/
 const generateHandleName = async (email?: string): Promise<string> => {
     const sanitize = (input: string): string =>
       input.replace(/[.#$\[\]/\\]/g, "_");

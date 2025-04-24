@@ -2,6 +2,7 @@ import { time } from "console";
 import { db } from "../firebase";
 import { collection, doc, getDocs, getDoc, onSnapshot, Timestamp, where, query, orderBy, limit } from "firebase/firestore";
 import { useLoginUser } from "../hooks/useLoginUser";
+import { getFriendDisplayName } from "./getFriendDisplayName";
 
 export type ChannelOverViewData = {
     channelId: string;
@@ -13,6 +14,7 @@ export type ChannelOverViewData = {
 };
 type callback = (data: ChannelOverViewData) => void;
 export const observeChannelOverView = (channelId:string, accountId: string, callback:callback) => {
+    if(!channelId) throw new Error("チャンネルIDが取得できませんでした。");
     const unsubscribe = onSnapshot(
         doc(db, "channels", channelId), async (docSnap) => {
             try{
@@ -67,21 +69,9 @@ const getFriendIdWithChannel = async (channelId:string, accountId:string) => {
     return usersSnap.docs.find((doc) => doc.id !== accountId )?.id;
 }
 
-const getFriendDisplayName = async (friendId:string, accountId:string) => {
-    const userDocSnap = await getDoc(doc(collection(doc(db,"users",accountId),"friends"),friendId,));
-    if (!userDocSnap.exists()) return;
-    const displayName =  userDocSnap.data().display_name;
-    if(displayName!=="") return displayName;
-    const user2DocSnap = await getDoc(doc(db,"users",friendId));
-    if (!user2DocSnap.exists()) return;
-    const display2Name =  user2DocSnap.data().display_name;
-    if(!display2Name) return;
-    return display2Name;
-}
 
 const getLastMessage =  (channelId:string, callback:(message:string|null, creatAt:Timestamp|null)=>void) => {
     const unsubscribe = onSnapshot(query(collection(doc(db,"channels",channelId),"messages"), orderBy("created_at", "desc"), limit(1)),(snapshot)=>{
-        console.log(snapshot)
         if (snapshot.empty) {
             callback(null,null);
             return;
