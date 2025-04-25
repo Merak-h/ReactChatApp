@@ -9,10 +9,12 @@ import { isAccount } from "../api/isAccount";
 import { createAccount } from "../api/createAccount";
 import { account } from "../types/account";
 import { readAccount } from "../api/readAccount";
+/*
+ログイン・ログアウト処理を行うカスタムフック
+*/
 
 export const useAuth = () => {
     const navigate = useNavigate();
-    const {showMessage} = useMessage();
     const { setAccount } = useLoginUser();
 
     const login = useCallback(async()=>{
@@ -39,7 +41,7 @@ export const useAuth = () => {
         } catch (error) {
             console.error("ログインエラー:", error);
         }
-    },[navigate, showMessage, setAccount])
+    },[navigate, setAccount])
 
     const logout = useCallback(async () => {
         try {

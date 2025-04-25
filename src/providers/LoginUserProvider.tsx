@@ -20,13 +20,22 @@ export const LoginUserProvider = (props: {children: ReactNode}) => {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async(user) => {
-            if (user) {
-                const account = await readAccount(user.uid);
-                setAccount(account);
-              } else {
+            try{
+                if (user) {
+                    console.log("aaaaa");
+                    const account = await readAccount(user.uid);
+                    setAccount(account);
+                } else {
+                    setAccount(null);
+                    console.log("bbbbb");
+                }
+            }
+            catch(error){
+                console.error("onAuthStateChangednのコールバック関数内でエラー",error);
                 setAccount(null);
+            } finally {
+                setLoading(false);
               }
-              setLoading(false);
         });
     
         return () => unsubscribe(); // クリーンアップ

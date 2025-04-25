@@ -7,12 +7,15 @@ import { FC, memo } from "react";
 import { Routes, Route } from "react-router-dom";
 import { DashboardLayout } from "../components/templates/DashboardLayout";
 import { PrivateRoute } from "./PrivateRoute";
+import { PublicRoute } from "./PublicRoute"
 import { Profile } from "../components/pages/Profile";
 
 export const Router:FC = memo(()=>{
     return(
         <Routes>
-            <Route path="/" element={<Login />} />
+            <Route element={<PublicRoute />} >
+                <Route path="/" element={<Login />} />
+            </Route>
             <Route element={<PrivateRoute />}>
                 <Route path="/setting/profile" element={<Profile />} />
                 <Route path="/setting" element={<Setting />} />
