@@ -22,12 +22,10 @@ export const LoginUserProvider = (props: {children: ReactNode}) => {
         const unsubscribe = onAuthStateChanged(auth, async(user) => {
             try{
                 if (user) {
-                    console.log("aaaaa");
                     const account = await readAccount(user.uid);
                     setAccount(account);
                 } else {
                     setAccount(null);
-                    console.log("bbbbb");
                 }
             }
             catch(error){

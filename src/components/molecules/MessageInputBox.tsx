@@ -12,7 +12,6 @@ export const MessageInputBox:FC<Props> = memo((props)=>{
     const [message, setMessage] = useState<string>("");
 
     const onClick = async () => {
-        console.log("is click")
         const success = await callback(message);
         if(success){
             setMessage("");

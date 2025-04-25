@@ -10,93 +10,64 @@ import { useChannels } from "../../hooks/useChannels";
 import { useNavigate, useParams  } from "react-router-dom";
 import { observeJoinedChannelIds } from "../../api/observeJoinedChannelIds";
 import { ChannelOverViewData, observeChannelOverView } from "../../api/observeChannelOverView";
+import { useChannelIds } from "../../hooks/channel/useChannelIds";
+import { useChannelOverviews } from "../../hooks/channel/useChannelOverviews";
 
-export const Home:FC = memo( () => {
+export const Home:FC = memo(() => {
+    const navigate = useNavigate();
+    const { id:channelId } = useParams();
+    const [ channels, getChannelIds ] = useChannelIds();
+    const [ channelOverviews, getChannelOverviews ] = useChannelOverviews();
 
-        const { id:channelId } = useParams();
+    useEffect(()=>{ // hcannel id 一覧リストの取得・監視
+        return getChannelIds();
+    },[]);
 
-        const { account } = useLoginUser();
+    useEffect(() => {// hcannel id 一覧リストから各hcannelのデータ概要の取得・監視
+        return getChannelOverviews(channels);
 
-        // const [createdAt] = useState(loginUser?.metadata.creationTime);
-        // const [lastLoginAt] = useState(loginUser?.metadata.lastSignInTime);
-        
-        const [currentChannel, setCurrentChannel] = useState(channelId||'');
+    }, [channels]);
 
+    const handleOpneChannel = (hcannelId:string) =>{
+        navigate(`/home/${hcannelId}`);
+    }
 
-       useEffect(()=>{
-        setCurrentChannel(currentChannel)
-       },[channelId])
-
-        const navigate = useNavigate();
-        const handleOpneChannel = (hcannelId:string) =>{
-            setCurrentChannel(hcannelId)
-            navigate(`/home/${hcannelId}`);
-        }
-
-        const [channels, setChannels] = useState<string[]>([]);
-        const [channelsList, setChannelsList] = useState<ChannelOverViewData[]>([]);
-
-        useEffect(()=>{
-            if(!account) return ;
-             const channelIdsUnsubscribe = observeJoinedChannelIds(account.account_id, (channels) =>{
-                setChannels(channels);
-            });
-            return ()=>channelIdsUnsubscribe();
-        },[]);
-
-        useEffect(() => {
-        if (channels.length === 0) return;
-
-        const channelMap = new Map<string, ChannelOverViewData>();
-        const unsubscribes: (() => void)[] = [];
-
-        channels.forEach((channelId) => {
-            const unsubscribe = observeChannelOverView(channelId, account?.account_id??"", (channelData) => {
-            channelMap.set(channelId, channelData);
-            setChannelsList(Array.from(channelMap.values())); // 最新の状態に更新
-            });
-            unsubscribes.push(unsubscribe);
-        });
-
-        return () => {
-            unsubscribes.forEach((unsub) => unsub()); // 監視解除
-        };
-        }, [channels]);
-
-
-return(
-    <>
-        <Container h="100%" w="100%" p={0}>
-            <Flex h="100%" w="100%" justifyContent="left">
-                <Box overflow="auto" h="100%" w="300px">
-                    {/* <Box>
-                        {createdAt===lastLoginAt?"初めまして！こんにちは！":"おかえりなさい！"}{userName??"名無し"}さん
-                    </Box> */}
-                    <Box w="100%">
-                        {channelsList?.map((channel)=>(
-                            <ChannelsListCard  
-                                key={channel.channelId}
-                                id={channel.channelId} 
-                                displayName={channel.channelName} 
-                                icon={channel.channelIcon} 
-                                message={channel.lastMessage} 
-                                timestamp={channel.lastMessageAt} 
-                                // unread={channel.unreradCount}
-                                unread={0}
-                                onClick={()=>{handleOpneChannel(channel.channelId)}}
-                                isCurrent = {currentChannel == channel.channelId}
-                            />
-                        ))}
+    return(
+        <>
+            <Container h="100%" w="100%" p={0}>
+                <Flex h="100%" w="100%" justifyContent="left">
+                    <Box overflow="auto" h="100%" w="300px">
+                        {/* <Box>
+                            {createdAt===lastLoginAt?"初めまして！こんにちは！":"おかえりなさい！"}{userName??"名無し"}さん
+                        </Box> */}
+                        <Box w="100%">
+                            {channelOverviews?.map((channel)=>(
+                                <ChannelsListCard  
+                                    key={channel.channelId}
+                                    id={channel.channelId} 
+                                    displayName={channel.channelName} 
+                                    icon={channel.channelIcon} 
+                                    message={channel.lastMessage} 
+                                    timestamp={channel.lastMessageAt} 
+                                    // unread={channel.unreradCount}
+                                    unread={0}
+                                    onClick={()=>{handleOpneChannel(channel.channelId)}}
+                                    isCurrent = {channelId == channel.channelId}
+                                />
+                            ))}
+                        </Box>
                     </Box>
-                </Box>
-                <Box h="100%" w="100%">
-                    <Channel channelId={currentChannel} />
-                </Box>
-            </Flex>
+                    <Box h="100%" w="100%">
+                        {!channelId ||channelId===""?
+                            <Box>
+                                <Text>ようこそ</Text>
+                            </Box>:
+                            <Channel channelId={channelId||""} />
+                        }
+                    </Box>
+                </Flex>
 
-        </Container>
-    </>
-)
-}
-
-);
+            </Container>
+        </>
+    )
+});

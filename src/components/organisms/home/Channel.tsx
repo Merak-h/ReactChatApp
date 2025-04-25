@@ -1,76 +1,68 @@
-import { Box, Flex, HStack, VStack } from "@chakra-ui/react";
+import { Box, Flex, HStack, IconButton, VStack } from "@chakra-ui/react";
 import { FC, memo, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Timestamp } from "firebase/firestore";
+
+import { IoChevronBackOutline } from "react-icons/io5";
 
 import { ChannelData, readChannelData } from "../../../api/readChannelData";
 import { Message, observeChannelMessages } from "../../../api/observeChannelMessages";
 import { MessageSpeechBubble } from "../../../components/molecules/MessageSpeechBubble";
 import { useLoginUser } from "../../../hooks/useLoginUser";
-import { Timestamp } from "firebase/firestore";
 import { MessageInputBox } from "../../../components/molecules/MessageInputBox";
 import { createChannelMessage } from "../../../api/createChannelMessage";
+import { useChannelData } from "../../../hooks/useChannelData";
 const since = Timestamp.now(); // 現在のタイムスタンプを基準に
 type Props ={
     channelId: string
 }
 export const Channel:FC<Props> = memo((props)=>{
-    const {channelId} = props;
+    const { channelId } = props;
     const {account} = useLoginUser();
 
-    const [channelData, setChannelData] = useState<ChannelData>();
-    const [channelDisplyName, setChannelDisplyName] = useState<string>()
-    const [messagesGroup, setMessagesGroup] = useState<Message[]>([]);
-    const [initialMessages, setinitialMessages ] = useState<Message[]>([]);
-    const [newMessages, setNewMessages] = useState<Message[]>([]);
-    const [oldMessages, setOldNewMessages] = useState<Message[]>([]);
-    const [ flagOldest, setFlagOldest] = useState(false);
+    const [ channelData, setChannelData ] = useState<ChannelData>();
+    const [ channelDisplyName, setChannelDisplyName ] = useState<string>()
+    const [ messagesGroup, setMessagesGroup ] = useState<Message[]>([]);
+    const [ initialMessages, setinitialMessages ] = useState<Message[]>([]);
+    const [ newMessages, setNewMessages ] = useState<Message[]>([]);
+    const [ oldMessages, setOldNewMessages ] = useState<Message[]>([]);
+    const [ flagOldest, setFlagOldest ] = useState(false);
     const flagOldestRef = useRef(flagOldest);
     const scrollRef = useRef<HTMLDivElement | null>(null);
     const chatContainerRef = useRef<HTMLDivElement | null>(null);
     const topMessageRef = useRef<HTMLDivElement | null>(null);
     const oldUnsubscribersRef = useRef<Array<() => void>>([]);
-    const {observeNewMessages, observeInitialMessages, observeOldMessages} = observeChannelMessages();
+    const { observeNewMessages, observeInitialMessages, observeOldMessages } = observeChannelMessages();
+    const { getChannelData, getChannelDisplayName } = useChannelData();
     
-    useEffect(() => { // channel data の取得
-        if(!channelId) return undefined;
-        if(!account) throw new Error("アカウント情報が取得できませんでした。");
-        const getChannelData = async () => {
-            try {
-                const channelData = await readChannelData(channelId, account.account_id);
-                if(!channelData) throw new Error('チャンネル情報の取得に失敗');
-                 setChannelData(channelData);
-
-                if(channelData.channel_name!=="" && channelData.status !== "personal"){
-                    setChannelDisplyName(channelData?.channel_name);
-                    return;
-                }
-                if(channelData.channel_name==="" && channelData.status !== "personal"){
-                    setChannelDisplyName("名称未設定グループ");
-                }
-                if(channelData.status === "personal"){
-                    const users = channelData.joined_users;
-                    const friendName = users.find((user)=>{
-                        return user.user_id!==account.account_id;
-                    })?.displayName;
-                    setChannelDisplyName(friendName);
-                }
-            } catch (error) {
-                console.error("チャンネル情報の取得に失敗:", error);
-            }
-        };
-        getChannelData();
-      }, [channelId, account]);
-
-
-
     useEffect(() => {
-        // initialize
+        // 初期化
         setMessagesGroup([]);
         setinitialMessages([]);
         setNewMessages([]);
         setOldNewMessages([]);
         setFlagOldest(false); 
-      }, [channelId]);
+    }, [channelId]);
+
+    useEffect(() => { // channel data の取得
+        if(!channelId) return undefined;
+        const channelData = async () => {
+            const channelData = await getChannelData(channelId);
+            setChannelData(channelData);
+        };
+        channelData();
+    }, [channelId]);
+
+    useEffect(()=>{ // channel name の取得
+        if(!channelData)return;
+        const channelName = getChannelDisplayName(channelData);
+        setChannelDisplyName(channelName);
+    },[channelData])
+
+    useEffect(()=>{ // messagesGroupの初期化処理
+        setMessagesGroup([...oldMessages,...initialMessages,...newMessages]);
+    },[initialMessages, newMessages, oldMessages]);
+
 
 
     useEffect(() => { // 最初の20件を取得して監視
@@ -109,17 +101,7 @@ export const Channel:FC<Props> = memo((props)=>{
 
         getChannelData();
     }, [channelId, account]);
-
-    useEffect(()=>{
-        setMessagesGroup([...oldMessages,...initialMessages,...newMessages]);
-    },[initialMessages, newMessages, oldMessages]);
-
     
-
-
-
-
-
     useEffect(() => {
         setFlagOldest(false);
         flagOldestRef.current = false;
@@ -180,10 +162,18 @@ export const Channel:FC<Props> = memo((props)=>{
       }, [messagesGroup]); // メッセージの更新時に実行
 
 
-    return(
+      const navigate = useNavigate();
+    const handleBack = ()=> {
+        navigate("/home/")
+    }
+
+    if(channelId!=="")return(
         <Flex h="100%" flexDirection="column">
             <Box h="40px">
                 <HStack>
+                    <IconButton onClick={handleBack} >
+                        <IoChevronBackOutline color="#000" />
+                    </IconButton>
                     <Link to="/">{channelDisplyName}</Link>
                 </HStack>
             </Box>

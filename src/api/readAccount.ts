@@ -4,10 +4,8 @@ import { account, friend } from "../types/account";
 
 export const readAccount = async (userId: string): Promise<account | null> => {
   try{
-    console.log("readAccount is load")
   const userDocRef = doc(db, "users", userId);
   const userDocSnap = await getDoc(userDocRef);
-console.log("readAccount:17 \n userDocSnap = ",userDocSnap);
   if (!userDocSnap.exists()) return null;
 
   const data = userDocSnap.data();
