@@ -1,15 +1,8 @@
-import { FC, memo, useEffect, useState } from "react";
-
-import { Avatar, Box, Button, Card, Circle, Container, Flex, Float, HStack, Input, Separator, Stack, Text, VStack, Wrap, WrapItem } from "@chakra-ui/react";
-import { useLoginUser } from "../../hooks/useLoginUser";
-import { doc, DocumentData, QuerySnapshot, setDoc } from "firebase/firestore";
-import { db } from "../../firebase";
-import { ChannelsListCard } from "../organisms/home/ChannelsListCard";
-import { Channel } from "../organisms/home/Channel";
-import { useChannels } from "../../hooks/useChannels";
+import { FC, memo, useEffect } from "react";
+import { Box, Container, Flex, Text } from "@chakra-ui/react";
 import { useNavigate, useParams  } from "react-router-dom";
-import { observeJoinedChannelIds } from "../../api/observeJoinedChannelIds";
-import { ChannelOverViewData, observeChannelOverView } from "../../api/observeChannelOverView";
+import { Channel } from "../organisms/home/Channel";
+import { ChannelsListCard } from "../organisms/home/ChannelsListCard";
 import { useChannelIds } from "../../hooks/channel/useChannelIds";
 import { useChannelOverviews } from "../../hooks/channel/useChannelOverviews";
 
@@ -62,7 +55,12 @@ export const Home:FC = memo(() => {
                             <Box>
                                 <Text>ようこそ</Text>
                             </Box>:
-                            <Channel channelId={channelId||""} />
+                            <Channel 
+                                channelId={channelId||""} 
+                                channelName={
+                                    channelOverviews.find((channelData)=>channelData.channelId==channelId)?.channelName||""
+                                } 
+                            />
                         }
                     </Box>
                 </Flex>

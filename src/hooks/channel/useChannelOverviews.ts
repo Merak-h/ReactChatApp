@@ -17,9 +17,9 @@ export const useChannelOverviews = ():UseChannelOverviewssResult =>{
     const getChannelOverviews = (channels: string[]):GetChannelOverviewsResult=> {
         try{
 
-        if(!account) throw new Error("ログイン情報が取得できませんでした");
+            if(!account) throw new Error("ログイン情報が取得できませんでした");
 
-        if (channels.length === 0)throw new Error("channelsが空です");
+            if (channels.length === 0)throw new Error("channelsが空です");
 
             const channelMap = new Map<string, ChannelOverViewData>();
             const unsubscribes: (() => void)[] = [];
