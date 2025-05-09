@@ -1,15 +1,29 @@
 import { useLoginUser } from "../../hooks/useLoginUser";
-import { Avatar, Button, Card, Clipboard, CloseButton, Container, Drawer, Heading, HStack, IconButton, Input, Portal, Separator, Stack, Text, VStack } from "@chakra-ui/react";
+import { Accordion, Avatar, Button, Card, Checkbox, Clipboard, CloseButton, Container, Drawer, Heading, HStack, IconButton, Input, Portal, RadioGroup, Separator, Span, Stack, Switch, Text, VStack } from "@chakra-ui/react";
 import { FC, memo, useEffect, useState } from "react";
 import { IoClose } from "react-icons/io5";
 import BackButton from "../atoms/button/BackButton";
 import { IoChevronBackOutline } from "react-icons/io5";
 import { HiUpload } from "react-icons/hi";
 import { useMessage } from "../../hooks/useMessage";
+import { TextInputDialog } from "../molecules/TextInputDialog";
+import { updateSettings } from "../../api/updateSettings";
+import { promises } from "dns";
+import { RadioAccordion } from "../molecules/RadioAccordion";
+import { readSettings } from "../../api/readSettings";
 
 export const Setting:FC = memo(() => {
 
-    const { account } = useLoginUser();
+    const { account, setAccount } = useLoginUser();
+    const {
+            updateDisplayName, 
+            updateHandleName, 
+            updateEmail,
+            updateSendKeyMode,
+        } = updateSettings(account?.account_id??"");
+    const {
+            readSendKeyMode,
+        } = readSettings(account?.account_id??"");
 
     const [ currentAccount_id, setCurrentAccount_id  ] = useState<string>();
     const [ currentDisplay_name, setCurrentDisplay_name  ] = useState<string>();
@@ -27,6 +41,11 @@ export const Setting:FC = memo(() => {
     const [ tel, setTel  ] = useState<string>();
     const [ handle_name, setHandle_name  ] = useState<string>();
 
+    const [isOpenDisplayName, setIsOpenDisplayName] = useState(false);
+    const [isOpenHandleName, setIsOpenHandleName] = useState(false);
+    const [isOpenEmail, setIsOpenEmail] = useState(false);
+    const [isOpenTel, setIsOpenTel] = useState(false);
+    
      const {updateMessage} = useMessage();
 
     const currentAccountData = Array
@@ -52,9 +71,10 @@ export const Setting:FC = memo(() => {
 
     const handleKeyUpMessage = (element:React.KeyboardEvent<HTMLInputElement>)=>{
         const {key} = element
-        if(key!=='Enter' || !message)return;
+        // if(key!=='Enter' || !message)return;
+        if(key!=='Enter')return;
         try{
-            updateMessage(message);
+            updateMessage(message?? "");
             console.log(message)
             element.currentTarget.blur();
             setCurrentMessage(message);
@@ -65,19 +85,94 @@ export const Setting:FC = memo(() => {
         }
     }
 
+    const handleUpdateDisplayName = async (displaytName:string):Promise<boolean>=>{
+        try{
+            const newDisplayName = await  updateDisplayName(displaytName);
+            if(!newDisplayName){throw new Error('表示名の更新失敗')}
+            setCurrentDisplay_name(newDisplayName);
+            setAccount(prev => prev ? { ...prev, display_name: newDisplayName } : prev);
+            return true;
+        }
+        catch (error){
+            console.error("handleUpdateDisplayName",error);
+            return false;
+        }
+    }
+
+    const handleUpdateHandleName = async (handleName:string):Promise<boolean>=>{
+        try{
+            const newHandleName = await  updateHandleName(handleName);
+            if(!newHandleName){throw new Error('表示名の更新失敗')}
+            setCurrentHandle_name(newHandleName);
+            setAccount(prev => prev ? { ...prev, handle_name: newHandleName } : prev);
+            return true;
+        }
+        catch (error){
+            console.error("handleUpdateDisplayName",error);
+            return false;
+        }
+    }
+
+    const handleUpdateEmail = async (email:string):Promise<boolean>=>{
+        try{
+            const newEmail = await  updateEmail(email);
+            if(!newEmail){throw new Error('表示名の更新失敗')}
+            setCurrentEmail(newEmail);
+            setAccount(prev => prev ? { ...prev, email: newEmail } : prev);
+            return true;
+        }
+        catch (error){
+            console.error("handleUpdateDisplayName",error);
+            return false;
+        }
+    }
+
+    const handleUpdateTel = async (tel:string):Promise<boolean>=>{
+        try{
+            const newTel = await  updateEmail(tel);
+            if(!newTel){throw new Error('表示名の更新失敗')}
+            setCurrentTel(newTel);
+            setAccount(prev => prev ? { ...prev, tel: newTel } : prev);
+            return true;
+        }
+        catch (error){
+            console.error("handleUpdateDisplayName",error);
+            return false;
+        }
+    }
+
+
+
+    const  sendKeyStatus= ["none", "Enter", "Shift + Enter", "Ctrl + Enter", "Alt + Enter"];
+    const [ sendKeyMode, setSendKeyMode ] = useState(sendKeyStatus[3]);
+    useEffect(()=>{
+        (async()=>{
+            const result = await readSendKeyMode();
+            console.log(result);
+            console.log(sendKeyStatus[result!==false?result:0]);
+            setSendKeyMode(sendKeyStatus[result!==false?result:0]);
+        })();
+    },[]);
+    const handleUpdateSendKey = async (status:string)=>{
+        const index = sendKeyStatus.indexOf(status);
+        await updateSendKeyMode(index);
+    }
 
     return (
         <Container backgroundColor="#efefef" minHeight="100vh">
            <VStack alignItems="flex-start" p={4} maxWidth={600} m="auto">
             <HStack w="100%" justifyContent="space-between">
-                <BackButton >
-                    <IoChevronBackOutline color="#000" />
-                </BackButton>
+                <HStack>
+                    <BackButton p="0px">
+                        <IoChevronBackOutline color="#000" />
+                    </BackButton>
+                    <Heading as="h1">設定</Heading>
+                </HStack>
+
                 <BackButton >
                     <IoClose color="#000"/>
                 </BackButton>
                 </HStack>
-                <Heading as="h1">設定</Heading>
                 <Heading as="h2">プロフィール</Heading>
                 <Card.Root w={460} p={8}>
                     <Card.Body borderRadius={8}>
@@ -119,35 +214,56 @@ export const Setting:FC = memo(() => {
                         <Text fontSize="sm" fontWeight="medium" color="#6a6a6a">表示名</Text>
                         <HStack justifyContent="space-between" w="100%">
                             <Text>{currentDisplay_name}</Text>
-                            <Button size="xs" height={7}>編集</Button>
+                            <Button size="xs" height={7} onClick={()=>setIsOpenDisplayName(true)}>編集</Button>
                         </HStack>
+                            <TextInputDialog title="表示名" defaultValue={currentDisplay_name??""} open={isOpenDisplayName} setOpen={setIsOpenDisplayName} callback={handleUpdateDisplayName} />
                     </VStack>
 
                     <VStack alignItems="flex-start" gap={0} p={4} w="100%">
                         <Text fontSize="sm" fontWeight="medium" color="#6a6a6a">ハンドルネーム</Text>
                         <HStack  justifyContent="space-between" w="100%">
                             <Text>@{currentHandle_name}</Text>
-                            <Button size="xs" height={7}>編集</Button>
+                            <Button size="xs" height={7} onClick={()=>setIsOpenHandleName(true)}>編集</Button>
                         </HStack>
+                        <TextInputDialog title="ハンドルネーム" defaultValue={currentHandle_name??""} open={isOpenHandleName} setOpen={setIsOpenHandleName} callback={handleUpdateHandleName} />
                     </VStack>
                 </>
                 
                 <Separator variant="solid" size="sm" w="100%" mt={8} mb={8}/>
                 <Heading as="h3">プライペート情報</Heading>
                 <VStack alignItems="flex-start" gap={0} p={4} w="100%">
-                        <Text fontSize="sm" fontWeight="medium" color="#6a6a6a">メールアドレス</Text>
-                        <HStack  justifyContent="space-between" w="100%">
-                            <Text>{email!==""? email :"情報なし"}</Text>
-                            <Button size="xs" height={7}>編集</Button>
-                        </HStack>
+                    <Text fontSize="sm" fontWeight="medium" color="#6a6a6a">メールアドレス</Text>
+                    <HStack  justifyContent="space-between" w="100%">
+                        <Text>{email!==""? email :"情報なし"}</Text>
+                        <Button size="xs" height={7} onClick={()=>setIsOpenEmail(true)}>編集</Button>
+                    </HStack>
+                    <TextInputDialog title="メールアドレス" defaultValue={currentEmail??""} open={isOpenEmail} setOpen={setIsOpenEmail} callback={handleUpdateEmail} />
+                </VStack>
+                <VStack alignItems="flex-start" gap={0} p={4} w="100%">
+                    <Text fontSize="sm" fontWeight="medium" color="#6a6a6a">電話番号</Text>
+                    <HStack  justifyContent="space-between" w="100%">
+                        <Text>{tel!==""? tel : "情報なし"}</Text>
+                        <Button size="xs" height={7} onClick={()=>setIsOpenTel(true)}>編集</Button>
+                    </HStack>
+                    <TextInputDialog title="電話番号" defaultValue={currentTel??""} open={isOpenTel} setOpen={setIsOpenTel} callback={handleUpdateTel} />
+                </VStack>
+
+                <Separator variant="solid" size="sm" w="100%" mt={8} mb={8}/>
+                <Heading as="h3">Channel</Heading>
+                <VStack w="100%">
+                    <VStack w="100%">
+
+                        <RadioAccordion 
+                            title={"送信のショートカット"}  
+                            values={sendKeyStatus} 
+                            defaultValue={3} 
+                            currentValue={sendKeyMode} 
+                            setCurrentValue= {setSendKeyMode}
+                            callback={handleUpdateSendKey}
+                        />
+                        
                     </VStack>
-                    <VStack alignItems="flex-start" gap={0} p={4} w="100%">
-                        <Text fontSize="sm" fontWeight="medium" color="#6a6a6a">電話番号</Text>
-                        <HStack  justifyContent="space-between" w="100%">
-                            <Text>{tel!==""? tel : "情報なし"}</Text>
-                            <Button size="xs" height={7}>編集</Button>
-                        </HStack>
-                    </VStack>
+                </VStack>
             </VStack>
         </Container>
     );

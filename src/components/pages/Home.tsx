@@ -1,5 +1,5 @@
 import { FC, memo, useEffect } from "react";
-import { Box, Container, Flex, Text } from "@chakra-ui/react";
+import { Box, Center, Container, Flex, Text } from "@chakra-ui/react";
 import { useNavigate, useParams  } from "react-router-dom";
 import { Channel } from "../organisms/home/Channel";
 import { ChannelsListCard } from "../organisms/home/ChannelsListCard";
@@ -50,7 +50,7 @@ export const Home:FC = memo(() => {
                             ))}
                         </Box>
                     </Box>
-                    <Box h="100%" w="100%">
+                    <Center h="100%" w="100%">
                         {!channelId ||channelId===""?
                             <Box>
                                 <Text>ようこそ</Text>
@@ -62,7 +62,7 @@ export const Home:FC = memo(() => {
                                 } 
                             />
                         }
-                    </Box>
+                    </Center>
                 </Flex>
 
             </Container>

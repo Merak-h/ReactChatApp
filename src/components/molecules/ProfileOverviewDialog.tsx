@@ -38,8 +38,8 @@ export const ProfileOverviewDialog:FC<Props> = memo((props) => {
 
     const navigate  = useNavigate();
     const handleClickEdit = ()=>{
-        // navigate("/setting/profile")
-        openProfile(true);
+        navigate("/setting")
+        // openProfile(true);
     }
 
     return(
