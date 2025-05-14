@@ -56,7 +56,7 @@ export const MessageInputBox:FC<Props> = memo((props)=>{
         const isAlt = e.altKey;
 
         if(sendKeyMode===0)return;
-        if(sendKeyMode===1 && key == 'Enter'){
+        if(sendKeyMode===1 && key == 'Enter' && !isShift && !isCtrl && !isAlt){
             const success = await callback(message);
             if(success){
                 setMessage("");
@@ -87,7 +87,7 @@ export const MessageInputBox:FC<Props> = memo((props)=>{
     return(
         <VStack w="100%">
             <HStack w="100%" justifyContent="right" pr={14}>
-                <Switch.Root checked={sendKeyMode!==0} onCheckedChange={e=>{handleSwitchMode(e.checked)}}>
+                <Switch.Root colorPalette="#925ad3" checked={sendKeyMode!==0} onCheckedChange={e=>{handleSwitchMode(e.checked)}}>
                     <Switch.Label>Send to {sendKeyStatus[defaultSendKeyMode!==0?defaultSendKeyMode:3]}</Switch.Label>
                     <Switch.HiddenInput />
                         <Switch.Control>
@@ -96,8 +96,8 @@ export const MessageInputBox:FC<Props> = memo((props)=>{
                 </Switch.Root>
             </HStack>
             <HStack p={1} h="fit-content" w="100%">
-                <Textarea placeholder="メッセージを入力" autoresize onChange={(e)=>{setMessage(e.target.value)}} value={message} rows={1} maxHeight="9rem" lineHeight="1.5rem" onKeyUp={e=>handleSendToEnter(e)}/>
-                <IconButton onClick={onClick}>
+                <Textarea placeholder="メッセージを入力" autoresize onChange={(e)=>{setMessage(e.target.value)}} value={message} rows={1} maxHeight="9rem" lineHeight="1.5rem" onKeyUp={e=>handleSendToEnter(e)} outlineColor="#7c6291"/>
+                <IconButton onClick={onClick} bg="#8668a8" _hover={{bg:"#715492"}} _active={{bg:"#645179"}}>
                     <RiSendPlaneFill />
                 </IconButton>
             </HStack>

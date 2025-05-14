@@ -27,7 +27,7 @@ export const Home:FC = memo(() => {
 
     return(
         <>
-            <Container h="100%" w="100%" p={0}>
+            <Container h="100%" w="100%" p={0} m={0} maxW="none">
                 <Flex h="100%" w="100%" justifyContent="left">
                     <Box overflow="auto" h="100%" w="300px">
                         {/* <Box>
@@ -50,10 +50,10 @@ export const Home:FC = memo(() => {
                             ))}
                         </Box>
                     </Box>
-                    <Center h="100%" w="100%">
+                    <Center h="100%" w="100%" bg="#b8b4c0">
                         {!channelId ||channelId===""?
                             <Box>
-                                <Text>ようこそ</Text>
+                                <Text fontFamily='"Slackside One", cursive' fontSize={32} color="#fff" textShadow="0 8px 8px 8px #000">Wellcome to <Text display="inline" fontFamily='"Playwrite DK Loopet", cursive'>Wiee Chat</Text> !</Text>
                             </Box>:
                             <Channel 
                                 channelId={channelId||""} 

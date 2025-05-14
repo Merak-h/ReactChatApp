@@ -1,4 +1,4 @@
-import { Box, Flex, HStack, IconButton, VStack } from "@chakra-ui/react";
+import { Box, Flex, HStack, IconButton, VStack, Text } from "@chakra-ui/react";
 import { FC, memo, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -76,16 +76,18 @@ export const Channel:FC<Props> = memo((props)=>{
     }
 
     if(channelId!=="")return(
-        <Flex h="100%" flexDirection="column">
-            <Box h="40px">
-                <HStack>
-                    <IconButton onClick={handleBack} >
-                        <IoChevronBackOutline color="#000" />
+        <Flex h="100%" w="100%" flexDirection="column">
+            <Box h="40px" bg="#9976c0" w="100%">
+                <HStack w="100%">
+                    <IconButton onClick={handleBack} bg="#0000">
+                        <IoChevronBackOutline color="#fff" />
                     </IconButton>
-                    <Link to="/">{channelName}</Link>
+                    <HStack w="100%" justifyContent="center">
+                        <Link to="/" ><Text color="#fff">{channelName}</Text></Link>
+                    </HStack>
                 </HStack>
             </Box>
-            <Box flex={1} position="relative" overflowY="auto" ref={chatContainerRef}>
+            <Box flex={1} position="relative" overflowY="auto" ref={chatContainerRef} _scrollbar={{width:"6px"}} _scrollbarThumb={{bg:"#0008",borderRadius:"100px"}}>
                 <VStack position="relative" bottom={0} gap={4} alignItems="flex-start" pl={4}>
                     {messages?.map((message, index)=>(
                         <Box

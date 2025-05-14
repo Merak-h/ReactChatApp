@@ -159,21 +159,21 @@ export const Setting:FC = memo(() => {
     }
 
     return (
-        <Container backgroundColor="#efefef" minHeight="100vh">
-           <VStack alignItems="flex-start" p={4} maxWidth={600} m="auto">
-            <HStack w="100%" justifyContent="space-between">
-                <HStack>
-                    <BackButton p="0px">
-                        <IoChevronBackOutline color="#000" />
-                    </BackButton>
-                    <Heading as="h1">設定</Heading>
-                </HStack>
+        <Container backgroundColor="#bcb9c2" height="100vh" maxW="none" overflow="auto"  _scrollbar={{width:"6px"}} _scrollbarThumb={{bg:"#0008",borderRadius:"100px"}}>
+           <VStack alignItems="flex-start" p={0} maxWidth={600} m="auto">
+                <HStack w="100%" justifyContent="space-between" position="fixed" zIndex={10} bg="#bcb9c2" paddingTop={6} paddingBottom={6}>
+                    <HStack>
+                        <BackButton p="0px">
+                            <IoChevronBackOutline color="#000" />
+                        </BackButton>
+                        <Heading as="h1">設定</Heading>
+                    </HStack>
 
-                <BackButton >
-                    <IoClose color="#000"/>
-                </BackButton>
+                    <BackButton >
+                        <IoClose color="#000"/>
+                    </BackButton>
                 </HStack>
-                <Heading as="h2">プロフィール</Heading>
+                <Heading as="h2" paddingTop="160px">プロフィール</Heading>
                 <Card.Root w={460} p={8}>
                     <Card.Body borderRadius={8}>
                         <Stack>
@@ -250,7 +250,7 @@ export const Setting:FC = memo(() => {
 
                 <Separator variant="solid" size="sm" w="100%" mt={8} mb={8}/>
                 <Heading as="h3">Channel</Heading>
-                <VStack w="100%">
+                <VStack w="100%" paddingBottom="128px">
                     <VStack w="100%">
 
                         <RadioAccordion 
