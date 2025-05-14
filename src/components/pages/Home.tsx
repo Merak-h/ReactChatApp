@@ -1,106 +1,71 @@
-import { FC, memo, useEffect, useState } from "react";
-
-import { Avatar, Box, Button, Card, Circle, Container, Flex, Float, HStack, Input, Separator, Stack, Text, VStack, Wrap, WrapItem } from "@chakra-ui/react";
-import { useLoginUser } from "../../hooks/useLoginUser";
-import { doc, setDoc } from "firebase/firestore";
-import { db } from "../../firebase";
-import { useDummy } from "../../hooks/useDummy";
-import { ChannelsListCard } from "../organisms/home/ChannelsListCard";
+import { FC, memo, useEffect } from "react";
+import { Box, Center, Container, Flex, Text } from "@chakra-ui/react";
+import { useNavigate, useParams  } from "react-router-dom";
 import { Channel } from "../organisms/home/Channel";
+import { ChannelsListCard } from "../organisms/home/ChannelsListCard";
+import { useChannelIds } from "../../hooks/channel/useChannelIds";
+import { useChannelOverviews } from "../../hooks/channel/useChannelOverviews";
 
-export const Home:FC = memo( () => {
+export const Home:FC = memo(() => {
+    const navigate = useNavigate();
+    const { id:channelId } = useParams();
+    const [ channels, getChannelIds ] = useChannelIds();
+    const [ channelOverviews, getChannelOverviews ] = useChannelOverviews();
 
-        const { account } = useLoginUser();
+    useEffect(()=>{ // hcannel id 一覧リストの取得・監視
+        return getChannelIds();
+    },[]);
 
-        const [uid] = useState(account?.account_id);
-        const [userName] = useState(account?.display_name);
-        // const [createdAt] = useState(loginUser?.metadata.creationTime);
-        // const [lastLoginAt] = useState(loginUser?.metadata.lastSignInTime);
-        
-        const [currentChannel, setCurrentChannel] = useState('default');
+    useEffect(() => {// hcannel id 一覧リストから各hcannelのデータ概要の取得・監視
+        return getChannelOverviews(channels);
 
-        
-        
+    }, [channels]);
 
-    //    const handleSubmit = async () => {
-    //         try {
-    //             await setDoc(doc(db, "users", uid!), {
-    //               message:"tesut",
-    //             }, {}); // ← merge: true で既存データを上書きしない
-    //             console.log("メッセージ保存成功");
-    //           } catch (err) {
-    //             console.error("Firestore書き込みエラー:", err);
-    //           }
-    //    } 
+    const handleOpneChannel = (hcannelId:string) =>{
+        navigate(`/home/${hcannelId}`);
+    }
 
-
-       const {dummyChannelsList} = useDummy();
-       const [channelsList,setChannelsList] = useState(dummyChannelsList);
-       
-        // console.log(channelsList)
-
-
-        const handleOpneChannel = (hcannelId:string) =>{
-            setCurrentChannel(hcannelId)
-        }
-
-
-return(
-    <>
-        <Container h="100%">
-            <Box>
-                {uid}
-            </Box>
-            <Box>
-            {userName}
-            </Box>
-            <Flex h="100%">
-                <Box overflow="auto" h="100%" w="300px">
-                    <Box w="100%">
-                        {channelsList.map((channel)=>(
-                            <ChannelsListCard  
-                                key={channel.id}
-                                id={channel.id} 
-                                displayName={channel.displayName} 
-                                icon={channel.icon} 
-                                message={channel.message} 
-                                timestamp={channel.timestamp} 
-                                unread={channel.unread}
-                                onClick={()=>{handleOpneChannel(channel.id)}}
-                            />
-                        ))}
+    return(
+        <>
+            <Container h="100%" w="100%" p={0} m={0} maxW="none">
+                <Flex h="100%" w="100%" justifyContent="left">
+                    <Box overflow="auto" h="100%" w="300px">
+                        {/* <Box>
+                            {createdAt===lastLoginAt?"初めまして！こんにちは！":"おかえりなさい！"}{userName??"名無し"}さん
+                        </Box> */}
+                        <Box w="100%">
+                            {channelOverviews?.map((channel)=>(
+                                <ChannelsListCard  
+                                    key={channel.channelId}
+                                    id={channel.channelId} 
+                                    displayName={channel.channelName} 
+                                    icon={channel.channelIcon} 
+                                    message={channel.lastMessage} 
+                                    timestamp={channel.lastMessageAt} 
+                                    // unread={channel.unreradCount}
+                                    unread={0}
+                                    onClick={()=>{handleOpneChannel(channel.channelId)}}
+                                    isCurrent = {channelId == channel.channelId}
+                                />
+                            ))}
+                        </Box>
                     </Box>
-                </Box>
-                <Box>
-                    <Channel channelId={currentChannel}>
+                    <Center h="100%" w="100%" bg="#b8b4c0">
+                        {!channelId ||channelId===""?
+                            <Box>
+                                <Text fontFamily='"Slackside One", cursive' fontSize={32} color="#fff" textShadow="0 8px 8px 8px #000">Wellcome to <Text display="inline" fontFamily='"Playwrite DK Loopet", cursive'>Wiee Chat</Text> !</Text>
+                            </Box>:
+                            <Channel 
+                                channelId={channelId||""} 
+                                channelName={
+                                    channelOverviews.find((channelData)=>channelData.channelId==channelId)?.channelName||""
+                                } 
+                            />
+                        }
+                    </Center>
+                </Flex>
 
-                    </Channel>
-                {/* <p>Home</p>
-        <p>
-            To Do
-        </p>
-        <p>
-            リロード時にログインユーザーの情報が消える問題
-        </p>
-        <p>
-            Firebaseに情報を登録
-        </p>
-        <p>
-            web socket
-        </p>
-        <p>
-            web hook
-        </p>
-        <Box>
-            {createdAt===lastLoginAt?"初めまして！こんにちは！":"おかえりなさい！"}{userName??"名無し"}さん
-        </Box>
-        <Button onClick={handleSubmit}>登録</Button> */}
-                </Box>
-            </Flex>
-
-        </Container>
-    </>
-)
-}
-
-);
+            </Container>
+        </>
+    )
+});

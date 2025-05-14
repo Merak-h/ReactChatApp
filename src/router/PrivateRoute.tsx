@@ -1,16 +1,15 @@
-import React, { FC, ReactNode, useEffect } from "react";
+import { FC, useState } from "react";
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "../firebase";
-import { Box } from "@chakra-ui/react";
 import { useLoginUser } from "../hooks/useLoginUser";
+import { Loading } from "../components/pages/Loading";
 
 export const PrivateRoute:FC = () => {
-  const [user, loading] = useAuthState(auth);
-  const {loading : noValue} = useLoginUser();
-  
+  const { loading, account } = useLoginUser();
+  const [finishFlag, setFinishFlag] = useState<boolean>(false);
 
-  if (loading || noValue) return <Box>読み込み中...</Box>;
+  if ( !finishFlag ) return (
+    <Loading loadFinish={!loading} callback={setFinishFlag} />
+  );
 
-  return user ? <Outlet /> : <Navigate to="/" replace />;
+  return account ? <Outlet /> : <Navigate to="/" replace />;
 };

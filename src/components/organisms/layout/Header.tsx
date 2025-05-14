@@ -35,9 +35,9 @@ export const Header:FC = memo(()=>{
     },[setOpenUserIcon]);
     return(
         <>
-            <Flex as="nav" bg="teal.500" color="gray.50" align="center" justify="space-between" padding={{base:3,md:5}}>
+            <Flex as="nav" bg="#c3b6d1" color="gray.50" align="center" justify="space-between" padding={{base:3,md:5}}>
                 <Flex align="center" as="a" mr={8} _hover={{cursor: "pointer"}} onClick={handleClickHome}>
-                    <Heading as="h1" fontSize={{base: "md", md:"lg"}}>チャットアプリ</Heading>
+                    <Heading as="h1" fontSize={{base: "md", md:"lg"}} fontFamily='"Playwrite DK Loopet", cursive'>Miee Chat!</Heading>
                 </Flex>
                 <Flex gap={4}>
                     <Button size="sm" p={0} w={10} height={10} borderRadius={100} overflow="hidden" onClick={handleClickUserIcon}>

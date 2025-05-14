@@ -1,74 +1,116 @@
-import { channel, message, useApiChannel } from "../../../hooks/api/useApiChannel";
-import { useApiUser, user } from "../../../hooks/api/useApiUser";
-import { Avatar, Box, HStack, Text, VStack } from "@chakra-ui/react";
-import { FC, memo, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Box, Flex, HStack, IconButton, VStack, Text } from "@chakra-ui/react";
+import { FC, memo, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
+import { IoChevronBackOutline } from "react-icons/io5";
+
+import { MessageSpeechBubble } from "../../../components/molecules/MessageSpeechBubble";
+import { useLoginUser } from "../../../hooks/useLoginUser";
+import { MessageInputBox } from "../../../components/molecules/MessageInputBox";
+import { createChannelMessage } from "../../../api/createChannelMessage";
+import { useChannelDetails } from "../../../hooks/channel/useChannelDetails";
+import { useChannelMessages } from "../../../hooks/channel/useChannelMessages";
+import { useMessageInput } from "../../../hooks/channel/useMessageInput";
 type Props ={
-    channelId: string
+    channelId: string;
+    channelName: string;
 }
 export const Channel:FC<Props> = memo((props)=>{
-    const {channelId} = props;
+    const { channelId, channelName } = props;
+    
+    const navigate = useNavigate();
+    const { sendMessage } = useMessageInput();
+    const [ channelData, getChannelData ] = useChannelDetails();
+    const { messages, watchMessages, setLoadOlderMessageFlag } = useChannelMessages(channelId);
 
-    const [channel, setChannel] = useState<channel>();
-    const [users, setUsers] = useState<user[]>();
+    const scrollRef = useRef<HTMLDivElement | null>(null);
+    const chatContainerRef = useRef<HTMLDivElement | null>(null);
+    const topMessageRef = useRef<HTMLDivElement | null>(null);
+    
 
-    // チャンネル情報の取得
-    const {getChannel} = useApiChannel();
+    // 初期化
+    useEffect(() => { 
+        getChannelData(channelId);// channel data の取得
+        watchMessages();// メッセージの取得と監視の開始
+    }, [channelId]);
 
     useEffect(() => {
-        const fetch = async () => {
-          const data = await getChannel(channelId);
-          setChannel(data);
-        };
-        fetch();
-      }, [channelId]);
+        const observer = new IntersectionObserver((entries)=>{
+                if(entries[0].isIntersecting) setLoadOlderMessageFlag(true);
+            },{
+                root: chatContainerRef.current, // スクロール対象
+                threshold: 0.2,                 // 完全に見えたら
+            }
+        );
+        if (topMessageRef.current) observer.observe(topMessageRef.current);
+        return () => observer.disconnect();
+    }, [messages, channelId]);
 
-    //   ユーザー情報の取得
-    const {getUsers} = useApiUser();
-      useEffect(()=>{
-        if(channel){
-            const fetch = async () => {
-                const data = await getUsers(channel.users);
-                setUsers(data);
-            };
-            fetch();
+
+
+    useEffect(() => {
+        if (!chatContainerRef.current || !scrollRef.current) return;
+      
+        const container = chatContainerRef.current;
+      
+        // スクロールが最下部近くなら自動スクロール（差がn px以内）
+        const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      
+        if (isAtBottom) {
+          scrollRef.current.scrollIntoView({ behavior: "smooth" });
         }
-      },[channel])
+      
+        // 初回ロード時もスクロール
+        if (messages?.length && container.scrollTop === 0) {
+          scrollRef.current.scrollIntoView({ behavior: "auto" });
+        }
+    }, [messages]); // メッセージの更新時に実行
 
-    const displayUser = (user_id:string)=>{
-        return users?.find(user=>(
-            user_id === user.user_id
-        ));
+    const handleSendMessage = async(message:string):Promise<boolean>=>{
+        return await sendMessage(channelId, message)
     }
 
-    return(
-        <Box>
-            <Box>
-                <HStack>
-                    <Link to="/channle">{channel?.channel_name}</Link>
+      
+    const handleBack = ()=> {
+        navigate("/home/")
+    }
+
+    if(channelId!=="")return(
+        <Flex h="100%" w="100%" flexDirection="column">
+            <Box h="40px" bg="#9976c0" w="100%">
+                <HStack w="100%">
+                    <IconButton onClick={handleBack} bg="#0000">
+                        <IoChevronBackOutline color="#fff" />
+                    </IconButton>
+                    <HStack w="100%" justifyContent="center">
+                        <Link to="/" ><Text color="#fff">{channelName}</Text></Link>
+                    </HStack>
                 </HStack>
             </Box>
-            <Box>
-                {channel?.messages.map((message:message)=>(
-                    <Box key={message.message_id}>
-                        <HStack>
-                            <Avatar.Root>
-                                <Avatar.Fallback />
-                                <Avatar.Image />
-                            </Avatar.Root>
-                            <VStack>
-                                <HStack>
-                                    <Text>{displayUser(message.sender_id)?.display_name ?? 'Unknown User'}</Text>
-                                    <Text>{message.creat_at}</Text>
-                                    <Text>{message.creat_at !== message.update_at ? '編集' : ''}</Text>
-                                </HStack>
-                                <Text>{message.text}</Text>
-                            </VStack>
-                        </HStack>
-                    </Box>
-                ))}
+            <Box flex={1} position="relative" overflowY="auto" ref={chatContainerRef} _scrollbar={{width:"6px"}} _scrollbarThumb={{bg:"#0008",borderRadius:"100px"}}>
+                <VStack position="relative" bottom={0} gap={4} alignItems="flex-start" pl={4}>
+                    {messages?.map((message, index)=>(
+                        <Box
+                            key={message.message_id}
+                            ref={index === 0 ? topMessageRef : null} // 先頭だけ監視対象
+                        >
+                        <MessageSpeechBubble 
+                            key={message.message_id} 
+                            content={message.content}
+                            user_name={channelData?.joined_users.find(user=>user.user_id==message.sender_id)?.displayName} 
+                            icon={channelData?.joined_users.find(user=>user.user_id==message.sender_id)?.icon} 
+                            is_read={true}
+                            created_at={message.created_at}
+                            updated_at={message.updated_at}
+                        />
+                        </Box>
+                    ))}
+                    <div ref={scrollRef} />
+                </VStack>
             </Box>
-        </Box>
+            <Box height="fit-content">
+                <MessageInputBox callback={handleSendMessage} />
+            </Box>
+        </Flex>
     );
 })
