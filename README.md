@@ -1,3 +1,26 @@
+# Wieechat
+
+## Overview
+シンプルなチャットアプリ
+
+## Release
+[wieechat.merak.work](https://wieechat.merak.work)
+
+## Snapshot
+![Image](https://github.com/user-attachments/assets/126ebe5c-1882-40d3-b23c-85aed3567087)
+
+![Image](https://github.com/user-attachments/assets/bb608810-994e-4f99-aabf-9ac462f094d6)
+
+![Image](https://github.com/user-attachments/assets/a0dc062b-24be-4cf3-a839-f8a9c3e3b80d)
+
+![Image](https://github.com/user-attachments/assets/f5849806-617b-4975-99d2-d0379307f871)
+
+
+## 使用技術
+React
+Firebase
+GoogleのOAuth 2.0
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -6,7 +29,7 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 In the project directory, you can run:
 
-### `npm start`
+### `npm run dev`
 
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
